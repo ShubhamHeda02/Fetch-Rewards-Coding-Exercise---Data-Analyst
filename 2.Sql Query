@@ -1,0 +1,76 @@
+#1)What are the top 5 brands by receipts scanned for most recent month?
+
+select top 5 b.name
+from FetchRewards.dbo.Receipt1 r1 inner join FetchRewards.dbo.Receipt2 r2 on r1.pid= r2._ParentKeyField inner join FetchRewards.dbo.Brand b on b.barcode=r2.barcode 
+where MONTH(dateScanned) = (select MONTH(max(dateScanned)) from FetchRewards.dbo.Receipt1)
+group by b.name
+order by count(r1._id)
+
+
+#2)How does the ranking of the top 5 brands by receipts scanned for the recent month compare to the ranking for the previous month?
+
+select top 5 b.name
+from FetchRewards.dbo.Receipt1 r1 inner join FetchRewards.dbo.Receipt2 r2 on r1.pid= r2._ParentKeyField inner join FetchRewards.dbo.Brand b on b.barcode=r2.barcode 
+where MONTH(dateScanned) = (select MONTH(max(dateScanned)) from FetchRewards.dbo.Receipt1)
+group by b.name
+order by count(r1._id)
+
+select top 5 b.name
+from FetchRewards.dbo.Receipt1 r1 inner join FetchRewards.dbo.Receipt2 r2 on r1.pid= r2._ParentKeyField inner join FetchRewards.dbo.Brand b on b.barcode=r2.barcode 
+where MONTH(dateScanned) between (select MONTH(max(dateScanned)) from FetchRewards.dbo.Receipt1) and (select MONTH(max(dateScanned))-1 from FetchRewards.dbo.Receipt1)
+group by b.name
+order by count(r1._id)
+
+
+#3)When considering average spend from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
+
+select avg(Receipt1.totalSpent) as AcceptanceAverage
+from Receipt1
+where rewardsReceiptStatus='FINISHED'
+
+select avg(Receipt1.totalSpent) as RejectAverage
+from Receipt1
+where rewardsReceiptStatus='REJECTED'
+
+IF (select avg(Receipt1.totalSpent) as AcceptanceAverage from Receipt1 where rewardsReceiptStatus='FINISHED')-(select avg(Receipt1.totalSpent) as RejectAverage from Receipt1 where rewardsReceiptStatus='REJECTED')<0
+   PRINT N'Average spent for Reject is more'
+ELSE
+   PRINT N'Average spent for Acceptance is more'
+
+
+#4)When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
+
+select count(Receipt1.purchasedItemCount) 
+from Receipt1
+where rewardsReceiptStatus='FINISHED'
+
+select count(Receipt1.purchasedItemCount)
+from Receipt1
+where rewardsReceiptStatus='REJECTED'
+
+IF (select count(Receipt1.purchasedItemCount) from Receipt1 where rewardsReceiptStatus='FINISHED')-(select count(Receipt1.purchasedItemCount) from Receipt1 where rewardsReceiptStatus='REJECTED')<0
+   PRINT N'Total iteam purchased for Reject is more'
+ELSE
+   PRINT N'Total iteam purchased for Acceptance is more'
+
+
+#5)Which brand has the most spend among users who were created within the past 6 months?
+USE FetchRewards;
+GO
+
+select top 1 b.name,sum(r1.totalSpent) as TotalSpent
+from
+Brand b join Receipt2 r2 on b.barcode=r2.barcode join Receipt1 r1 on r2._ParentKeyField=r1.pid join [dbo].[User] on [dbo].[User]._id=r1.userId
+where datediff(DAY,[dbo].[User].createdDate,GETDATE())<=180
+group by b.name
+order by sum(r1.totalSpent) desc
+
+
+#6)Which brand has the most transactions among users who were created within the past 6 months?
+
+select b.name,count(r1.totalSpent) as NumberOfTransaction
+from
+Brand b join Receipt2 r2 on b.barcode=r2.barcode join Receipt1 r1 on r2._ParentKeyField=r1.pid join [dbo].[User] on [dbo].[User]._id=r1.userId
+where datediff(DAY,[dbo].[User].createdDate,GETDATE())<=180
+group by b.name
+order by count(r1._id) desc
