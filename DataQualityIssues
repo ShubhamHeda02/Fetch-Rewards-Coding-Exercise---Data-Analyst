@@ -1,0 +1,5 @@
+Here are some of the data quality issues that I found in the given dataset
+1)There were lot of null values in the entire dataset.
+2)There were 1726 duplicate values in the User file out of total 1980 values.
+3)There were some barcodes which were in Receipt file but were not in Brand file leading to incomplete data.
+4)The receipt json file was having a parent child relationship in it leading to creation of two tables leading to increase in complexity.
